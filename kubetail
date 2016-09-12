@@ -3,21 +3,25 @@
 # kubernetes script to tail multiple pods matching a pod name
 # Author: Luis Azevedo labraceta@gmail.com
 
+readonly PROGNAME=$(basename $0)
+
+usage="${PROGNAME} - tail multiple Kubernetes pod logs at the same time
+
+examples:
+    ${PROGNAME} my-pod-v1"
+
 if [ $# -eq 0 ]; then
 	echo "$usage"
 	exit 1
-fi
+fi    
 
-usage="${PROGNAME} tail multiple Kubernetes pod logs at the same time
-examples:
-    ${PROGNAME} my-pod-v1"
-    
 POD_NAME=$1
+XARGS_PARALLEL=10 
 
-MATCHING_PODS=$(kubectl get pods --no-headers | grep $1 | wc -l)
+MATCHING_PODS=$(kubectl get pods --no-headers | grep $POD_NAME | wc -l)
 if [ $MATCHING_PODS -eq 0 ]; then
     echo "No pods exists that matches ${1}"
     exit 1
 fi
 
-kubectl get pods --no-headers | grep $1 | cut -f1 -d' ' | xargs -P10 -L1 -n1 kubectl logs -f
+kubectl get pods --no-headers | grep $POD_NAME | cut -f1 -d' ' | xargs -P$XARGS_PARALLEL -L1 -n1 kubectl logs -f
